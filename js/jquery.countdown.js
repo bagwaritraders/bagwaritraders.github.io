@@ -1,154 +1,41 @@
-/**
- * @name		jQuery Countdown Plugin
- * @author		Martin Angelov
- * @version 	1.0
- * @url			http://tutorialzine.com/2011/12/countdown-jquery/
- * @license		MIT License
- */
-
-(function($){
-	
-	// Number of seconds in every time division
-	var days	= 24*60*60,
-		hours	= 60*60,
-		minutes	= 60;
-	
-	// Creating the plugin
-	$.fn.countdown = function(prop){
-		
-		var options = $.extend({
-			callback	: function(){},
-			timestamp	: 0
-		},prop);
-		
-		var left, d, h, m, s, positions;
-
-		// Initialize the plugin
-		init(this, options);
-		
-		positions = this.find('.position');
-		
-		(function tick(){
-			
-			// Time left
-			left = Math.floor((options.timestamp - (new Date())) / 1000);
-			
-			if(left < 0){
-				left = 0;
-			}
-			
-			// Number of days left
-			d = Math.floor(left / days);
-			updateDuo(0, 1, d);
-			left -= d*days;
-			
-			// Number of hours left
-			h = Math.floor(left / hours);
-			updateDuo(2, 3, h);
-			left -= h*hours;
-			
-			// Number of minutes left
-			m = Math.floor(left / minutes);
-			updateDuo(4, 5, m);
-			left -= m*minutes;
-			
-			// Number of seconds left
-			s = left;
-			updateDuo(6, 7, s);
-			
-			// Calling an optional user supplied callback
-			options.callback(d, h, m, s);
-			
-			// Scheduling another call of this function in 1s
-			setTimeout(tick, 1000);
-		})();
-		
-		// This function updates two digit positions at once
-		function updateDuo(minor,major,value){
-			switchDigit(positions.eq(minor),Math.floor(value/10)%10);
-			switchDigit(positions.eq(major),value%10);
-		}
-		
-		return this;
+/*!jQuery Circular CountDown*/
+(function($) {
+	$.fn.ccountdown = function(_yr, _m, _d, _t) {
+		var $this = this;
+		var _montharray = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+		var _today = new Date();
+		// calling function first time so that it wll setup remaining time
+		var _changeTime = function() {
+			var _today = new Date();
+			var _todayy = _today.getYear();
+			if (_todayy < 1000)
+				_todayy += 1900;
+			var _todaym = _today.getMonth();
+			var _todayd = _today.getDate();
+			var _todayh = _today.getHours();
+			var _todaymin = _today.getMinutes();
+			var _todaysec = _today.getSeconds();
+			_todaysec = "0" + _todaysec;
+			_todaysec = _todaysec.substr(_todaysec.length - 2);
+			var _todaystring = _montharray[_todaym] + " " + _todayd + ", " + _todayy + " " + _todayh + ":" + _todaymin + ":" + _todaysec;
+			var _futurestring = _montharray[_m - 1] + " " + _d + ", " + _yr + " " + _t;
+			/* calculation of remaining days, hrs, min, and secs */
+			_dd = Date.parse(_futurestring) - Date.parse(_todaystring);
+			_dday = Math.floor(_dd / (60 * 60 * 1000 * 24) * 1);
+			_dhour = Math.floor((_dd % (60 * 60 * 1000 * 24)) / (60 * 60 * 1000) * 1);
+			_dmin = Math.floor(((_dd % (60 * 60 * 1000 * 24)) % (60 * 60 * 1000)) / (60 * 1000) * 1);
+			_dsec = Math.floor((((_dd % (60 * 60 * 60 * 1000 * 24)) % (60 * 60 * 1000)) % (60 * 1000)) / 1000 * 1);
+			var el = $($this);
+			var $ss = el.find(".second"), $mm = el.find(".minute"), $hh = el.find(".hour"), $dd = el.find(".days");
+			$ss.val(_dsec).trigger("change");
+			$mm.val(_dmin).trigger("change");
+			$hh.val(_dhour).trigger("change");
+			$dd.val(_dday).trigger("change");
+};
+		_changeTime();
+		setInterval(_changeTime, 1000);
 	};
-
-
-	function init(elem, options){
-		elem.addClass('countdownHolder');
-
-		// Creating the markup inside the container
-		$.each(['Days','Hours','Minutes','Seconds'],function(i){
-			var boxName;
-			if(this=="Days") {
-				boxName = "DAYS";
-			}
-			else if(this=="Hours") {
-				boxName = "Hours";
-			}
-			else if(this=="Minutes") {
-				boxName = "Minutes";
-			}
-			else {
-				boxName = "Seconds";
-			}
-			$('<div class="count'+this+'">' +
-				'<span class="position">' +
-					'<span class="digit static">0</span>' +
-				'</span>' +
-				'<span class="position">' +
-					'<span class="digit static">0</span>' +
-				'</span>' +
-				'<span class="boxName">' +
-					'<span class="'+this+'">' + boxName + '</span>' +
-				'</span>'
-			).appendTo(elem);
-			
-			if(this!="Seconds"){
-				elem.append('<span class="points">:</span><span class="countDiv countDiv'+i+'"></span>');
-			}
-		});
-
-	}
-
-	// Creates an animated transition between the two numbers
-	function switchDigit(position,number){
-		
-		var digit = position.find('.digit')
-		
-		if(digit.is(':animated')){
-			return false;
-		}
-		
-		if(position.data('digit') == number){
-			// We are already showing this number
-			return false;
-		}
-		
-		position.data('digit', number);
-		
-		var replacement = $('<span>',{
-			'class':'digit',
-			css:{
-				top:0,
-				opacity:0
-			},
-			html:number
-		});
-		
-		// The .static class is added when the animation
-		// completes. This makes it run smoother.
-		
-		digit
-			.before(replacement)
-			.removeClass('static')
-			.animate({top:0,opacity:0},'fast',function(){
-				digit.remove();
-			})
-
-		replacement
-			.delay(100)
-			.animate({top:0,opacity:1},'fast',function(){
-				replacement.addClass('static');
-			});
-	}
+ 
 })(jQuery);
+
+//hour = (hour < 10) ? "0"+hour : hour;
