@@ -1,6 +1,4 @@
 ﻿<?php
-
-// Replace this with your own email address
 $siteOwnersEmail = 'bagwaritraders@gmail.com';
 
 
